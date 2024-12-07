@@ -1,0 +1,165 @@
+{% extends "layout.html" %} {% block content %}
+
+<!-- Header -->
+<section class="section_header_business">
+  <div class="container">
+    <div class="header">
+      <div class="box">
+        <h1 style="font-size: 55px">
+          <span class="text-logo"> Modelo de Negocio</span>
+        </h1>
+        <p style="text-align: left">
+          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Repellat
+          dolores quos asperiores repellendus facilis cum illo aperiam odit
+          doloremque nostrum. Totam excepturi labore voluptatibus iusto sapiente
+          quisquam consectetur optio magnam voluptates omnis vel officia alias
+          distinctio quas laborum reiciendis ratione inventore veniam,
+          cupiditate doloribus dolore, eius natus a. Magni inventore
+          consequuntur voluptas reprehenderit perferendis! Molestias aspernatur
+          rem autem aut temporibus.
+        </p>
+        <div class="container_buttons_links_header">
+          
+            
+          
+          <div class="btn">
+            <a
+              href="{{url_for('app.app_home')}}"
+              class="btn btn-primary btn-lg mr-2"
+              ,
+              style="background-color: #007bff"
+              >InfoTour</a
+            >
+          </div>
+        </div>
+      </div>
+      <div class="box">
+        <img
+          src="{{url_for('static', filename='icons/business.svg')}}"
+          width="325"
+          height="325"
+          alt=""
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- business -->
+<section class="section_body_business">
+  <div class="container">
+    <div class="business" style="display: block">
+      <h1 style="text-align: center">Nuestro Modelo de Negocio</h1>
+      <p>Nuestro modelo de negocio está orientado a …</p>
+    </div>
+
+    <!--Enumerated list (table with two columns)-->
+    <div class="business">
+      <div class="box_table2" style="height: 200px">
+        <div class="h1 mb-3" style="text-align: center">
+          <i class="fa-solid fa-briefcase"></i>
+        </div>
+        <h4 style="text-align: center">Nuestro Canvas Business Model</h4>
+        <p class="text-left">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Recusandae,
+          tenetur.
+          <button id="open-modal-btn" class="btn btn-primary" style="margin-top: 10px;">
+            Ver Imagen
+          </button>
+        </p>
+        
+      </div>
+      
+      <div class="box_table2" style="height: 200px">
+        <div class="h1 mb-3" style="text-align: center">
+          <i class="fa-solid fa-hand-holding-heart"></i>
+        </div>
+        <h4 style="text-align: center">Nuestros Valores</h4>
+        <p class="text-left">
+          Lorem ipsum, dolor sit amet consectetur adipisicing elit. Voluptas,
+          quidem.
+        </p>
+      </div>
+    </div>
+  </div>
+  <div id="image-modal" class="modal">
+    <div class="modal-content">
+      <span id="close-modal" class="close">&times;</span>
+      <img
+        src="{{ url_for('static', filename='foto.png') }}"
+        alt="Canvas Business Model"
+        style="width: 100%; height: auto;"
+      />
+    </div>
+</section>
+
+<style>
+  /* Modal Styles */
+  .modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    position: relative;
+    background-color: white;
+    margin: auto;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    max-width: 65%;
+  }
+
+  .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: black;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .close:hover,
+  .close:focus {
+    color: red;
+    text-decoration: none;
+    cursor: pointer;
+  }
+</style>
+
+<script>
+  // Obtener elementos
+  const modal = document.getElementById("image-modal");
+  const openModalBtn = document.getElementById("open-modal-btn");
+  const closeModal = document.getElementById("close-modal");
+
+  // Abrir modal
+  openModalBtn.addEventListener("click", () => {
+    modal.style.display = "flex";
+  });
+
+  // Cerrar modal
+  closeModal.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+
+  // Cerrar modal al hacer clic fuera de él
+  window.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  });
+</script>
+
+{% endblock content %}

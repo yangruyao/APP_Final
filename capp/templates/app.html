@@ -1,0 +1,321 @@
+{% extends "layout.html" %} {% block content %}
+
+<style>
+    #map {
+        height: 50vh;
+        width: 100%;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+    }
+
+    #data-container {
+        margin-top: 20px;
+        padding: 40px;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    h3, h4 {
+        font-family: Arial, sans-serif;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .data-table th, .data-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+    }
+
+    .data-table th {
+        background-color: #007BFF;
+        color: white;
+        font-weight: bold;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    .data-table tbody tr:hover {
+        background-color: #ddd;
+    }
+
+    .data-table select {
+        width: 100%;
+        background: none;
+        border: 1px solid #ddd;
+        font-size: inherit;
+        padding: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .data-table select:focus {
+        outline: none;
+        border-color: #007BFF;
+    }
+</style>
+
+<div id="map"></div>
+<div id="data-container">
+   <h3>Datos Turísticos: <span id="province-name"></span></h3>
+    <div>
+        <h4>Atracciones</h4>
+        <table id="atracciones-table" class="data-table">
+            <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td colspan="2">Selecciona una provincia en el mapa para ver los datos</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <h4>Procedencia </h4>
+        <table id="turismo-table" class="data-table">
+            <thead>
+            <tr>
+                <th>Año</th>
+                <th>
+                    Mes
+                    <select id="month-filter">
+                        <option value="all">Todos</option>
+                        <option value="1">Enero</option>
+                        <option value="2">Febrero</option>
+                        <option value="3">Marzo</option>
+                        <option value="4">Abril</option>
+                        <option value="5">Mayo</option>
+                        <option value="6">Junio</option>
+                        <option value="7">Julio</option>
+                        <option value="8">Agosto</option>
+                        <option value="9">Septiembre</option>
+                        <option value="10">Octubre</option>
+                        <option value="11">Noviembre</option>
+                        <option value="12">Diciembre</option>
+                    </select>
+                </th>
+                <th>
+                    Origen
+                    <select id="origin-filter">
+                        <option value="all">Todos</option>
+                    </select>
+                </th>
+                <th>Turistas</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td colspan="4">Selecciona una provincia en el mapa para ver los datos</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+<div>
+    <h4>Satisfacción</h4>
+    <table id="satisfaccion-table" class="data-table">
+        <thead>
+        <tr>
+            <th>Año</th>
+            <th>
+                Mes
+                <select id="satisfaccion-month-filter">
+                    <option value="all">Todos</option>
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+            </th>
+            <th>
+                Origen
+                <select id="satisfaccion-origin-filter">
+                    <option value="all">Todos</option>
+                </select>
+            </th>
+            <th>Percepción </th>
+            <th>Satisfacción </th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td colspan="6">Selecciona una provincia en el mapa para ver los datos</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</div>
+
+<script>
+    const map = L.map('map').setView([40.4168, -3.7038], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    let loadedData = { atracciones: [], turismo: [], satisfaccion: [] };
+
+    function updateOriginFilter() {
+        const originFilter = document.getElementById("origin-filter");
+        const uniqueOrigins = [...new Set(loadedData.turismo.map(item => item['Pais Origen']))];
+        originFilter.innerHTML = `<option value="all">Todos</option>` +
+            uniqueOrigins.map(origin => `<option value="${origin}">${origin}</option>`).join('');
+    }
+
+    function filterTourismTable() {
+        const monthFilter = document.getElementById("month-filter").value;
+        const originFilter = document.getElementById("origin-filter").value;
+        const turismoTableBody = document.querySelector("#turismo-table tbody");
+
+        const filteredData = loadedData.turismo.filter(item =>
+            (monthFilter === "all" || item.Mes === monthFilter) &&
+            (originFilter === "all" || item['Pais Origen'] === originFilter)
+        );
+
+        turismoTableBody.innerHTML = filteredData.length
+            ? filteredData.map(item =>
+                `<tr>
+                    <td>${item.Año}</td>
+                    <td>${item.Mes}</td>
+                    <td>${item['Pais Origen']}</td>
+                    <td>${item.Turistas}</td>
+                </tr>`
+            ).join('')
+            : `<tr><td colspan="4">No se encontraron datos para los filtros seleccionados</td></tr>`;
+    }
+
+function updateSatisfaccionTable() {
+    const satisfaccionTableBody = document.querySelector("#satisfaccion-table tbody");
+
+    if (!satisfaccionTableBody) {
+        console.error("El elemento #satisfaccion-table no existe en el DOM");
+        return;
+    }
+
+    // Actualiza los filtros
+    updateSatisfaccionOriginFilter();
+
+    // Renderiza todos los datos inicialmente
+    satisfaccionTableBody.innerHTML = loadedData.satisfaccion.length
+        ? loadedData.satisfaccion.map(item =>
+            `<tr>
+                <td>${item.Año}</td>
+                <td>${item.Mes}</td>
+                <td>${item['Pais Origen']}</td>
+                <td>${item['Satisfaccion General'] || "N/A"}</td>
+                <td>${item['Satisfaccion Productos'] || "N/A"}</td>
+            </tr>`
+        ).join('')
+        : `<tr><td colspan="6">No se encontraron datos de satisfacción</td></tr>`;
+}
+function filterSatisfaccionTable() {
+    const monthFilter = document.getElementById("satisfaccion-month-filter").value;
+    const originFilter = document.getElementById("satisfaccion-origin-filter").value;
+    const satisfaccionTableBody = document.querySelector("#satisfaccion-table tbody");
+
+    const filteredData = loadedData.satisfaccion.filter(item =>
+        (monthFilter === "all" || item.Mes === monthFilter) &&
+        (originFilter === "all" || item['Pais Origen'] === originFilter)
+    );
+
+    satisfaccionTableBody.innerHTML = filteredData.length
+        ? filteredData.map(item =>
+            `<tr>
+                <td>${item.Año}</td>
+                <td>${item.Mes}</td>
+                <td>${item['Pais Origen']}</td>
+                <td>${item['Satisfaccion General'] || "N/A"}</td>
+                <td>${item['Satisfaccion Productos'] || "N/A"}</td>
+            </tr>`
+        ).join('')
+        : `<tr><td colspan="6">No se encontraron datos para los filtros seleccionados</td></tr>`;
+}
+
+function updateSatisfaccionOriginFilter() {
+    const satisfaccionOriginFilter = document.getElementById("satisfaccion-origin-filter");
+    const uniqueOrigins = [...new Set(loadedData.satisfaccion.map(item => item['Pais Origen']))];
+    satisfaccionOriginFilter.innerHTML = `<option value="all">Todos</option>` +
+        uniqueOrigins.map(origin => `<option value="${origin}">${origin}</option>`).join('');
+}
+
+document.getElementById("satisfaccion-month-filter").addEventListener("change", filterSatisfaccionTable);
+document.getElementById("satisfaccion-origin-filter").addEventListener("change", filterSatisfaccionTable);
+
+    document.getElementById("month-filter").addEventListener("change", filterTourismTable);
+    document.getElementById("origin-filter").addEventListener("change", filterTourismTable);
+
+    fetch('https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/spain-provinces.geojson')
+        .then(response => response.json())
+        .then(data => {
+            L.geoJson(data, {
+                style: {
+                    color: '#007BFF',
+                    weight: 2,
+                },
+                onEachFeature: (feature, layer) => {
+layer.on('click', () => {
+    const provinceName = feature.properties.name;
+    document.getElementById("province-name").textContent = provinceName;
+
+            fetch(`/api/tourism/attractions?province=${provinceName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    loadedData = data;
+
+                    // Atracciones
+                    const atraccionesTableBody = document.querySelector("#atracciones-table tbody");
+                    atraccionesTableBody.innerHTML = data.atracciones.length
+                        ? data.atracciones.map(item =>
+                            `<tr>
+                                <td>${item.Nombre}</td>
+                                <td>${item.Descripcion}</td>
+                            </tr>`
+                        ).join('')
+                        : `<tr><td colspan="2">No se encontraron datos de atracciones</td></tr>`;
+
+                    // Turismo
+                    updateOriginFilter();
+                    filterTourismTable();
+
+                    // Satisfacción
+                    updateSatisfaccionTable();
+                    filterSatisfaccionTable();
+                })
+                .catch(error => console.error("Error:", error));
+        });
+                },
+            }).addTo(map);
+        })
+        .catch(error => console.error("Error al cargar el GeoJSON:", error));
+</script>
+{% endblock content %}
